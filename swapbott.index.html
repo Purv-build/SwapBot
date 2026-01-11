@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SwapBot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<style>
+:root{--p:#1e3a8a;--s:#3b82f6;--bg:#f4f6f8}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:var(--bg)}
+header{background:var(--p);color:#fff;padding:14px;text-align:center}
+nav{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.card{background:#fff;margin:14px;padding:18px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.hidden{display:none}
+h3{color:var(--p);text-align:center;margin-top:0}
+input,select,textarea,button{width:100%;padding:10px;margin-top:8px}
+button{background:var(--s);color:#fff;border:none;border-radius:6px}
+button.secondary{background:#e5e7eb;color:var(--p)}
+small{color:#555}
+.center{text-align:center}
+.badge{font-weight:bold}
+.list{font-size:14px}
+</style>
+</head>
+
+<body>
+
+<header style="background:#1e3a8a;color:white;padding:18px;text-align:center">
+  <img src="swapbot-logo.png" 
+       alt="SwapBot Logo" 
+       style="width:70px;display:block;margin:0 auto 6px;">
+
+  <h2 style="margin:4px 0;font-weight:600;">SwapBot</h2>
+
+  <small style="
+    display:block;
+    margin-top:2px;
+    font-size:13px;
+    letter-spacing:0.4px;
+    color:#c7d2fe;
+  ">
+    Smart Library Management System
+  </small>
+</header>
+
+<!-- LOGIN -->
+<div id="login" class="card">
+<h3>Login</h3>
+<select id="role">
+  <option value="admin">Admin</option>
+  <option value="librarian">Librarian</option>
+  <option value="student">Student</option>
+</select>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button class="secondary" onclick="show('register')">Student Register</button>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="card hidden">
+<h3>Student Registration</h3>
+<input id="rName" placeholder="Name">
+<input id="rClass" placeholder="Class">
+<input id="rRoll" placeholder="Roll No">
+<input id="rEmail" placeholder="Email">
+<input id="rPass" type="password" placeholder="Password">
+<button onclick="registerStudent()">Register</button>
+<button class="secondary" onclick="show('login')">Back</button>
+</div>
+
+<!-- STUDENT -->
+<div id="student" class="card hidden">
+<h3>Student Dashboard</h3>
+<p class="badge">My Badge: <span id="studentBadge"></span></p>
+<button onclick="genStudentQR()">🎓 My QR</button>
+<button onclick="loadMyIssued()">📘 My Issued Books</button>
+<button onclick="show('donate')">🎁 Donate Book</button>
+<button onclick="showBlog()">📚 Blog</button>
+<button onclick="showLeaderboard()">🏆 Leaderboard</button>
+<button class="secondary" onclick="logout()">Logout</button>
+<div id="studentQR" class="center"></div>
+<div id="myIssued" class="list"></div>
+</div>
+
+<!-- DONATE -->
+<div id="donate" class="card hidden">
+<h3>Donate Book</h3>
+<input id="donBook" placeholder="Book Name">
+<button onclick="donateBook()">Submit Donation</button>
+<button class="secondary" onclick="show('student')">Back</button>
+</div>
+
+<!-- LIBRARIAN -->
+<div id="librarian" class="card hidden">
+<h3>Librarian Dashboard</h3>
+
+<h4>Add Book (Generate QR)</h4>
+<input id="newBookName" placeholder="Book Name">
+<input id="newBookNo" placeholder="Copy / Book No">
+<button onclick="genBookQR()">Generate Book QR</button>
+<div id="bookQR" class="center"></div>
+
+<hr>
+
+<h4>Issue Book</h4>
+<textarea id="studentQRText" placeholder="Paste Student QR text here"></textarea>
+<input id="issueBookNo" placeholder="Book No">
+<button onclick="issueBook()">Issue Book</button>
+
+<hr>
+
+<h4>Return Book</h4>
+<input id="returnBookNo" placeholder="Book No">
+<button onclick="returnBook()">Return Book</button>
+
+<hr>
+
+<h4>Issued Books</h4>
+<div id="issuedList" class="list"></div>
+
+<hr>
+
+<h4>Donation Requests</h4>
+<div id="donationList" class="list"></div>
+
+<hr>
+
+<h4>Add Blog</h4>
+<input id="blogTitle" placeholder="Title">
+<textarea id="blogContent" placeholder="Content"></textarea>
+<button onclick="addBlog()">Publish</button>
+
+<button class="secondary" onclick="logout()">Logout</button>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="card hidden">
+<h3>Admin Dashboard</h3>
+
+<p>Total Students: <b id="statStudents"></b></p>
+<p>Total Librarians: <b id="statLib"></b></p>
+<p>Issued Books: <b id="statIssued"></b></p>
+
+<h4>Create Librarian</h4>
+<input id="lEmail" placeholder="Email">
+<input id="lPass" placeholder="Password">
+<button onclick="createLibrarian()">Create</button>
+
+<h4>Change Admin Password</h4>
+<input id="oldPass" type="password" placeholder="Current Password">
+<input id="newPass" type="password" placeholder="New Password">
+<button onclick="changeAdminPassword()">Change Password</button>
+
+<button class="secondary" onclick="logout()">Logout</button>
+</div>
+
+<script>
+/* STORAGE */
+let users=JSON.parse(localStorage.users||"[]");
+let issued=JSON.parse(localStorage.issued||"[]");
+let donations=JSON.parse(localStorage.donations||"[]");
+let blogs=JSON.parse(localStorage.blogs||"[]");
+
+if(!users.find(u=>u.role==="admin")){
+ users.push({role:"admin",email:"admin@swapbot.com",password:"admin123"});
+ localStorage.users=JSON.stringify(users);
+}
+let currentUser=null;
+
+/* NAV */
+function show(id){
+ document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+}
+function logout(){location.reload();}
+
+/* AUTH */
+function login(){
+ let u=users.find(x=>x.role===role.value&&x.email===email.value&&x.password===password.value);
+ if(!u){alert("Invalid credentials");return;}
+ currentUser=u;
+ if(u.role==="student"){updateBadge();show("student")}
+ if(u.role==="librarian"){loadLibrarian();show("librarian")}
+ if(u.role==="admin"){loadAdmin();show("admin")}
+}
+
+/* STUDENT */
+function registerStudent(){
+ users.push({role:"student",name:rName.value,class:rClass.value,roll:rRoll.value,email:rEmail.value,password:rPass.value});
+ localStorage.users=JSON.stringify(users);
+ alert("Registered");
+ show("login");
+}
+function genStudentQR(){
+ studentQR.innerHTML="";
+ new QRCode(studentQR,{text:`SWAPBOT_STUDENT|name=${currentUser.name}|class=${currentUser.class}|roll=${currentUser.roll}|email=${currentUser.email}`,width:200,height:200});
+}
+function donateBook(){
+ donations.push({email:currentUser.email,book:donBook.value,verified:false});
+ localStorage.donations=JSON.stringify(donations);
+ alert("Donation submitted");
+ show("student");
+}
+function loadMyIssued(){
+ myIssued.innerHTML=issued.filter(i=>i.student===currentUser.email).map(i=>`• ${i.bookNo}`).join("<br>");
+}
+function updateBadge(){
+ let c=donations.filter(d=>d.email===currentUser.email&&d.verified).length;
+ studentBadge.textContent=c>=25?"Stage 5":c>=18?"Stage 4":c>=12?"Stage 3":c>=7?"Stage 2":c>=3?"Stage 1":"—";
+}
+
+/* LIBRARIAN */
+function genBookQR(){
+ bookQR.innerHTML="";
+ new QRCode(bookQR,{text:`SWAPBOT_BOOK|name=${newBookName.value}|no=${newBookNo.value}`,width:180,height:180});
+}
+function issueBook(){
+ if(!studentQRText.value.includes("email=")){alert("Invalid Student QR");return;}
+ let email=studentQRText.value.split("email=")[1];
+ issued.push({bookNo:issueBookNo.value,student:email});
+ localStorage.issued=JSON.stringify(issued);
+ alert("Book Issued");
+ loadLibrarian();
+}
+function returnBook(){
+ issued=issued.filter(i=>i.bookNo!==returnBookNo.value);
+ localStorage.issued=JSON.stringify(issued);
+ alert("Book Returned");
+ loadLibrarian();
+}
+function loadLibrarian(){
+ issuedList.innerHTML=issued.map(i=>`• ${i.bookNo} → ${i.student}`).join("<br>");
+ donationList.innerHTML=donations.map((d,i)=>!d.verified?`• ${d.book} <button onclick="verifyDonation(${i})">Accept</button>`:"").join("<br>");
+}
+function verifyDonation(i){
+ donations[i].verified=true;
+ localStorage.donations=JSON.stringify(donations);
+ loadLibrarian();
+}
+
+/* BLOG */
+function addBlog(){
+ blogs.push({title:blogTitle.value,content:blogContent.value});
+ localStorage.blogs=JSON.stringify(blogs);
+ alert("Blog added");
+}
+function showBlog(){
+ alert(blogs.map(b=>b.title+": "+b.content).join("\n\n")||"No blogs yet");
+}
+function showLeaderboard(){
+ let board={};
+ donations.filter(d=>d.verified).forEach(d=>board[d.email]=(board[d.email]||0)+1);
+ alert(Object.entries(board).sort((a,b)=>b[1]-a[1]).map(e=>e[0]+" : "+e[1]).join("\n")||"No donors yet");
+}
+
+/* ADMIN */
+function createLibrarian(){
+ users.push({role:"librarian",email:lEmail.value,password:lPass.value});
+ localStorage.users=JSON.stringify(users);
+ alert("Librarian created");
+ loadAdmin();
+}
+function changeAdminPassword(){
+ if(oldPass.value!==currentUser.password){alert("Wrong password");return;}
+ currentUser.password=newPass.value;
+ users=users.map(u=>u.role==="admin"?currentUser:u);
+ localStorage.users=JSON.stringify(users);
+ alert("Password changed");
+}
+function loadAdmin(){
+ statStudents.textContent=users.filter(u=>u.role==="student").length;
+ statLib.textContent=users.filter(u=>u.role==="librarian").length;
+ statIssued.textContent=issued.length;
+}
+</script>
+
+</body>
+</html>
