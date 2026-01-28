@@ -5,43 +5,80 @@
 <title>SwapBot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
 <style>
-:root{--p:#1e3a8a;--s:#3b82f6;--bg:#f4f6f8}
+:root{
+  --primary:#1E3A8A;
+  --secondary:#3B82F6;
+  --accent:#6366F1;
+  --bg:#F4F6F8;
+  --card:#FFFFFF;
+  --text:#111827;
+  --muted:#6B7280;
+  --success:#22C55E;
+  --warning:#F59E0B;
+  --danger:#EF4444;
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:var(--bg)}
-header{background:var(--p);color:#fff;padding:14px;text-align:center}
-nav{display:flex;gap:8px;justify-content:center;margin-top:8px}
-.card{background:#fff;margin:14px;padding:18px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+body{margin:0;font-family:Arial;background:var(--bg);color:var(--text)}
+header{
+  background:var(--primary);
+  color:white;
+  text-align:center;
+  padding:18px;
+}
+header img{width:70px;display:block;margin:0 auto 6px}
+header small{color:#c7d2fe;font-size:13px;letter-spacing:.4px}
+
+.card{
+  background:var(--card);
+  margin:16px;
+  padding:18px;
+  border-radius:14px;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+}
 .hidden{display:none}
-h3{color:var(--p);text-align:center;margin-top:0}
-input,select,textarea,button{width:100%;padding:10px;margin-top:8px}
-button{background:var(--s);color:#fff;border:none;border-radius:6px}
-button.secondary{background:#e5e7eb;color:var(--p)}
-small{color:#555}
+h3{margin-top:0;color:var(--primary);text-align:center}
+
+input,select,textarea,button{
+  width:100%;
+  padding:11px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+button{
+  background:var(--secondary);
+  color:white;
+  border:none;
+  cursor:pointer;
+  transition:.2s;
+}
+button:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.15)}
+button.secondary{background:#e5e7eb;color:var(--primary)}
+.section{margin-top:14px}
+.section h4{margin-bottom:6px;color:var(--primary)}
+.qr-box{
+  border:2px dashed var(--accent);
+  padding:14px;
+  border-radius:14px;
+  display:inline-block;
+  background:#eef2ff;
+  margin-top:10px;
+}
+.status{font-size:12px;padding:4px 8px;border-radius:8px}
+.pending{background:#FEF3C7;color:#92400E}
+.success{background:#DCFCE7;color:#166534}
 .center{text-align:center}
-.badge{font-weight:bold}
-.list{font-size:14px}
 </style>
 </head>
 
 <body>
 
-<header style="background:#1e3a8a;color:white;padding:18px;text-align:center">
-  <img src="swapbot-logo.png" 
-       alt="SwapBot Logo" 
-       style="width:70px;display:block;margin:0 auto 6px;">
-
-  <h2 style="margin:4px 0;font-weight:600;">SwapBot</h2>
-
-  <small style="
-    display:block;
-    margin-top:2px;
-    font-size:13px;
-    letter-spacing:0.4px;
-    color:#c7d2fe;
-  ">
-    Smart Library Management System
-  </small>
+<header>
+  <img src="swapbot-logo.png">
+  <h2>SwapBot</h2>
+  <small>Smart Library Management System</small>
 </header>
 
 <!-- LOGIN -->
@@ -73,64 +110,51 @@ small{color:#555}
 <!-- STUDENT -->
 <div id="student" class="card hidden">
 <h3>Student Dashboard</h3>
-<p class="badge">My Badge: <span id="studentBadge"></span></p>
-<button onclick="genStudentQR()">🎓 My QR</button>
-<button onclick="loadMyIssued()">📘 My Issued Books</button>
-<button onclick="show('donate')">🎁 Donate Book</button>
-<button onclick="showBlog()">📚 Blog</button>
-<button onclick="showLeaderboard()">🏆 Leaderboard</button>
-<button class="secondary" onclick="logout()">Logout</button>
-<div id="studentQR" class="center"></div>
-<div id="myIssued" class="list"></div>
+
+<div class="section">
+<h4>🎓 My QR ID</h4>
+<button onclick="generateStudentQR()">Generate QR</button>
+<div id="studentQR" class="qr-box"></div>
 </div>
 
-<!-- DONATE -->
-<div id="donate" class="card hidden">
-<h3>Donate Book</h3>
+<div class="section">
+<h4>🎁 Donate Book</h4>
 <input id="donBook" placeholder="Book Name">
-<button onclick="donateBook()">Submit Donation</button>
-<button class="secondary" onclick="show('student')">Back</button>
+<button onclick="donateBook()">Donate</button>
+</div>
+
+<button class="secondary" onclick="logout()">Logout</button>
 </div>
 
 <!-- LIBRARIAN -->
 <div id="librarian" class="card hidden">
 <h3>Librarian Dashboard</h3>
 
-<h4>Add Book (Generate QR)</h4>
-<input id="newBookName" placeholder="Book Name">
-<input id="newBookNo" placeholder="Copy / Book No">
-<button onclick="genBookQR()">Generate Book QR</button>
-<div id="bookQR" class="center"></div>
+<div class="section">
+<h4>📦 Add Book (QR)</h4>
+<input id="bookName" placeholder="Book Name">
+<input id="bookNo" placeholder="Book Number">
+<button onclick="generateBookQR()">Generate Book QR</button>
+<div id="bookQR" class="qr-box"></div>
+</div>
 
-<hr>
+<div class="section">
+<h4>🔄 Issue Book</h4>
+<textarea id="studentQRText" placeholder="Paste Student QR text"></textarea>
+<input id="issueBookNo" placeholder="Book Number">
+<button onclick="issueBook()">Issue</button>
+</div>
 
-<h4>Issue Book</h4>
-<textarea id="studentQRText" placeholder="Paste Student QR text here"></textarea>
-<input id="issueBookNo" placeholder="Book No">
-<button onclick="issueBook()">Issue Book</button>
+<div class="section">
+<h4>🔁 Return Book</h4>
+<input id="returnBookNo" placeholder="Book Number">
+<button onclick="returnBook()">Return</button>
+</div>
 
-<hr>
-
-<h4>Return Book</h4>
-<input id="returnBookNo" placeholder="Book No">
-<button onclick="returnBook()">Return Book</button>
-
-<hr>
-
-<h4>Issued Books</h4>
-<div id="issuedList" class="list"></div>
-
-<hr>
-
-<h4>Donation Requests</h4>
-<div id="donationList" class="list"></div>
-
-<hr>
-
-<h4>Add Blog</h4>
-<input id="blogTitle" placeholder="Title">
-<textarea id="blogContent" placeholder="Content"></textarea>
-<button onclick="addBlog()">Publish</button>
+<div class="section">
+<h4>📋 Issued Books</h4>
+<div id="issuedList"></div>
+</div>
 
 <button class="secondary" onclick="logout()">Logout</button>
 </div>
@@ -139,142 +163,124 @@ small{color:#555}
 <div id="admin" class="card hidden">
 <h3>Admin Dashboard</h3>
 
-<p>Total Students: <b id="statStudents"></b></p>
-<p>Total Librarians: <b id="statLib"></b></p>
-<p>Issued Books: <b id="statIssued"></b></p>
-
-<h4>Create Librarian</h4>
+<div class="section">
+<h4>👩‍🏫 Create Librarian</h4>
 <input id="lEmail" placeholder="Email">
 <input id="lPass" placeholder="Password">
 <button onclick="createLibrarian()">Create</button>
+</div>
 
-<h4>Change Admin Password</h4>
+<div class="section">
+<h4>🔐 Change Admin Password</h4>
 <input id="oldPass" type="password" placeholder="Current Password">
 <input id="newPass" type="password" placeholder="New Password">
-<button onclick="changeAdminPassword()">Change Password</button>
+<button onclick="changeAdminPassword()">Update</button>
+</div>
 
 <button class="secondary" onclick="logout()">Logout</button>
 </div>
 
 <script>
-/* STORAGE */
 let users=JSON.parse(localStorage.users||"[]");
 let issued=JSON.parse(localStorage.issued||"[]");
 let donations=JSON.parse(localStorage.donations||"[]");
-let blogs=JSON.parse(localStorage.blogs||"[]");
+let currentUser=null;
 
 if(!users.find(u=>u.role==="admin")){
  users.push({role:"admin",email:"admin@swapbot.com",password:"admin123"});
  localStorage.users=JSON.stringify(users);
 }
-let currentUser=null;
 
-/* NAV */
 function show(id){
  document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
  document.getElementById(id).classList.remove('hidden');
 }
-function logout(){location.reload();}
-
-/* AUTH */
+function logout(){
+ sessionStorage.clear();
+ currentUser=null;
+ show("login");
+}
 function login(){
  let u=users.find(x=>x.role===role.value&&x.email===email.value&&x.password===password.value);
  if(!u){alert("Invalid credentials");return;}
  currentUser=u;
- if(u.role==="student"){updateBadge();show("student")}
- if(u.role==="librarian"){loadLibrarian();show("librarian")}
- if(u.role==="admin"){loadAdmin();show("admin")}
+ sessionStorage.setItem("user",JSON.stringify(u));
+ show(u.role);
+}
+window.onload=()=>{
+ let u=sessionStorage.getItem("user");
+ if(u){currentUser=JSON.parse(u);show(currentUser.role);}
 }
 
-/* STUDENT */
 function registerStudent(){
  users.push({role:"student",name:rName.value,class:rClass.value,roll:rRoll.value,email:rEmail.value,password:rPass.value});
  localStorage.users=JSON.stringify(users);
- alert("Registered");
+ alert("Registered successfully");
  show("login");
 }
-function genStudentQR(){
+
+function generateStudentQR(){
  studentQR.innerHTML="";
- new QRCode(studentQR,{text:`SWAPBOT_STUDENT|name=${currentUser.name}|class=${currentUser.class}|roll=${currentUser.roll}|email=${currentUser.email}`,width:200,height:200});
+ new QRCode(studentQR,{
+  text:`SWAPBOT_STUDENT|name=${currentUser.name}|class=${currentUser.class}|roll=${currentUser.roll}|email=${currentUser.email}`,
+  width:180,height:180
+ });
 }
+
 function donateBook(){
- donations.push({email:currentUser.email,book:donBook.value,verified:false});
+ donations.push({student:currentUser.email,book:donBook.value});
  localStorage.donations=JSON.stringify(donations);
  alert("Donation submitted");
- show("student");
-}
-function loadMyIssued(){
- myIssued.innerHTML=issued.filter(i=>i.student===currentUser.email).map(i=>`• ${i.bookNo}`).join("<br>");
-}
-function updateBadge(){
- let c=donations.filter(d=>d.email===currentUser.email&&d.verified).length;
- studentBadge.textContent=c>=25?"Stage 5":c>=18?"Stage 4":c>=12?"Stage 3":c>=7?"Stage 2":c>=3?"Stage 1":"—";
 }
 
-/* LIBRARIAN */
-function genBookQR(){
+function generateBookQR(){
  bookQR.innerHTML="";
- new QRCode(bookQR,{text:`SWAPBOT_BOOK|name=${newBookName.value}|no=${newBookNo.value}`,width:180,height:180});
+ new QRCode(bookQR,{
+  text:`SWAPBOT_BOOK|name=${bookName.value}|no=${bookNo.value}`,
+  width:160,height:160
+ });
 }
+
 function issueBook(){
- if(!studentQRText.value.includes("email=")){alert("Invalid Student QR");return;}
+ if(!studentQRText.value.includes("email=")){alert("Invalid student QR");return;}
  let email=studentQRText.value.split("email=")[1];
- issued.push({bookNo:issueBookNo.value,student:email});
+ issued.push({book:issueBookNo.value,student:email});
  localStorage.issued=JSON.stringify(issued);
- alert("Book Issued");
- loadLibrarian();
+ alert("Book issued");
+ renderIssued();
 }
+
 function returnBook(){
- issued=issued.filter(i=>i.bookNo!==returnBookNo.value);
+ issued=issued.filter(i=>i.book!==returnBookNo.value);
  localStorage.issued=JSON.stringify(issued);
- alert("Book Returned");
- loadLibrarian();
-}
-function loadLibrarian(){
- issuedList.innerHTML=issued.map(i=>`• ${i.bookNo} → ${i.student}`).join("<br>");
- donationList.innerHTML=donations.map((d,i)=>!d.verified?`• ${d.book} <button onclick="verifyDonation(${i})">Accept</button>`:"").join("<br>");
-}
-function verifyDonation(i){
- donations[i].verified=true;
- localStorage.donations=JSON.stringify(donations);
- loadLibrarian();
+ alert("Book returned");
+ renderIssued();
 }
 
-/* BLOG */
-function addBlog(){
- blogs.push({title:blogTitle.value,content:blogContent.value});
- localStorage.blogs=JSON.stringify(blogs);
- alert("Blog added");
-}
-function showBlog(){
- alert(blogs.map(b=>b.title+": "+b.content).join("\n\n")||"No blogs yet");
-}
-function showLeaderboard(){
- let board={};
- donations.filter(d=>d.verified).forEach(d=>board[d.email]=(board[d.email]||0)+1);
- alert(Object.entries(board).sort((a,b)=>b[1]-a[1]).map(e=>e[0]+" : "+e[1]).join("\n")||"No donors yet");
+function renderIssued(){
+ issuedList.innerHTML=issued.length
+  ? issued.map(i=>`<div>📘 ${i.book} → ${i.student}</div>`).join("")
+  : "<small>No books issued yet</small>";
 }
 
-/* ADMIN */
 function createLibrarian(){
  users.push({role:"librarian",email:lEmail.value,password:lPass.value});
  localStorage.users=JSON.stringify(users);
  alert("Librarian created");
- loadAdmin();
 }
+
 function changeAdminPassword(){
  if(oldPass.value!==currentUser.password){alert("Wrong password");return;}
  currentUser.password=newPass.value;
  users=users.map(u=>u.role==="admin"?currentUser:u);
  localStorage.users=JSON.stringify(users);
- alert("Password changed");
-}
-function loadAdmin(){
- statStudents.textContent=users.filter(u=>u.role==="student").length;
- statLib.textContent=users.filter(u=>u.role==="librarian").length;
- statIssued.textContent=issued.length;
+ alert("Password updated");
 }
 </script>
+
+<small style="display:block;text-align:center;color:#6B7280;margin:20px">
+QR camera scanning may vary by device. Manual workflows ensure full reliability.
+</small>
 
 </body>
 </html>
